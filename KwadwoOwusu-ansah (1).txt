@@ -1,0 +1,214 @@
+CS323 - Case Study 2: Individual Work
+Projects Schema - Chapter 7
+Name   : Kwadwo Yamoah Owusu-Ansah
+ID     : 75912027
+Cohort : C
+
+DATABASE SCHEMA (COMPANY Database - Projects Schema)
+EMPLOYEE(Fname, Minit, Lname, Ssn, Bdate, Address, Sex, Salary, Super_ssn, Dno)
+DEPARTMENT(Dname, Dnumber, Mgr_ssn, Mgr_start_date)
+DEPT_LOCATIONS(Dnumber, Dlocation)
+PROJECT(Pname, Pnumber, Plocation, Dnum)
+WORKS_ON(Essn, Pno, Hours)
+DEPENDENT(Essn, Dependent_name, Sex, Bdate, Relationship)
+
+
+Q1 - Retrieve employees in department 5 who work more than
+     10 hours/week on the 'ProductX' project
+
+SQL:
+----
+SELECT E.Fname, E.Lname
+FROM EMPLOYEE E, WORKS_ON W, PROJECT P
+WHERE E.Ssn = W.Essn
+  AND W.Pno = P.Pnumber
+  AND P.Pname = 'ProductX'
+  AND W.Hours > 10
+  AND E.Dno = 5;
+
+RESULT:
+-------
+Fname     | Lname
+----------|--------
+John      | Smith
+Joyce     | English
+
+
+Q2 - List employees who have a dependent with the same
+     first name as themselves
+
+SQL:
+----
+SELECT E.Fname, E.Lname
+FROM EMPLOYEE E, DEPENDENT D
+WHERE E.Ssn = D.Essn
+  AND E.Fname = D.Dependent_name;
+
+RESULT:
+-------
+Fname   | Lname
+--------|-------
+James   | Borg
+
+
+Q3 - Find employees directly supervised by 'Franklin Wong'
+
+SQL:
+----
+SELECT E.Fname, E.Lname
+FROM EMPLOYEE E, EMPLOYEE S
+WHERE E.Super_ssn = S.Ssn
+  AND S.Fname = 'Franklin'
+  AND S.Lname = 'Wong';
+
+RESULT:
+-------
+Fname    | Lname
+---------|--------
+John     | Smith
+Ramesh   | Narayan
+Joyce    | English
+
+
+Q4 - For each project, list project name and total hours
+     worked by all employees
+
+SQL:
+----
+SELECT P.Pname, SUM(W.Hours) AS Total_Hours
+FROM PROJECT P, WORKS_ON W
+WHERE P.Pnumber = W.Pno
+GROUP BY P.Pname;
+
+RESULT:
+-------
+Pname           | Total_Hours
+----------------|------------
+ProductX        | 52.5
+ProductY        | 37.5
+ProductZ        | 50.0
+Computerization | 55.0
+Reorganization  | 25.0
+Newbenefits     | 55.0
+
+
+Q5 - Retrieve employees who work on EVERY project
+
+SQL:
+----
+SELECT E.Fname, E.Lname
+FROM EMPLOYEE E
+WHERE NOT EXISTS (
+  SELECT P.Pnumber
+  FROM PROJECT P
+  WHERE NOT EXISTS (
+    SELECT W.Essn
+    FROM WORKS_ON W
+    WHERE W.Essn = E.Ssn
+      AND W.Pno = P.Pnumber
+  )
+);
+
+RESULT:
+-------
+(Empty result set - no employee works on every project)
+
+
+Q6 - Retrieve employees who do NOT work on any project
+
+SQL:
+----
+SELECT E.Fname, E.Lname
+FROM EMPLOYEE E
+WHERE NOT EXISTS (
+  SELECT *
+  FROM WORKS_ON W
+  WHERE W.Essn = E.Ssn
+);
+
+RESULT:
+-------
+Fname   | Lname
+--------|-------
+James   | Borg
+
+
+Q7 - For each project, retrieve project number, name, and
+     number of employees working on it
+
+SQL:
+----
+SELECT P.Pnumber, P.Pname, COUNT(*) AS Num_Employees
+FROM PROJECT P, WORKS_ON W
+WHERE P.Pnumber = W.Pno
+GROUP BY P.Pnumber, P.Pname;
+
+RESULT:
+-------
+Pnumber | Pname           | Num_Employees
+--------|-----------------|---------------
+1       | ProductX        | 2
+2       | ProductY        | 3
+3       | ProductZ        | 2
+10      | Computerization | 3
+20      | Reorganization  | 3
+30      | Newbenefits     | 3
+
+
+Q8 - For each project with MORE than 2 employees, retrieve
+     project number, name, and employee count
+
+SQL:
+----
+SELECT P.Pnumber, P.Pname, COUNT(*) AS Num_Employees
+FROM PROJECT P, WORKS_ON W
+WHERE P.Pnumber = W.Pno
+GROUP BY P.Pnumber, P.Pname
+HAVING COUNT(*) > 2;
+
+RESULT:
+-------
+Pnumber | Pname           | Num_Employees
+--------|-----------------|---------------
+2       | ProductY        | 3
+10      | Computerization | 3
+20      | Reorganization  | 3
+30      | Newbenefits     | 3
+
+
+Q9 - Retrieve sum, max, min, and average salary of all employees
+
+SQL:
+----
+SELECT SUM(Salary) AS Sum_Sal,
+       MAX(Salary) AS Max_Sal,
+       MIN(Salary) AS Min_Sal,
+       AVG(Salary) AS Avg_Sal
+FROM EMPLOYEE;
+
+RESULT:
+-------
+Sum_Sal    | Max_Sal  | Min_Sal  | Avg_Sal
+-----------|----------|----------|----------
+370000.00  | 55000.00 | 25000.00 | 41111.11
+
+
+Q10 - Retrieve total number of employees in each department
+
+SQL:
+----
+SELECT D.Dname, COUNT(*) AS Num_Employees
+FROM DEPARTMENT D, EMPLOYEE E
+WHERE D.Dnumber = E.Dno
+GROUP BY D.Dname;
+
+RESULT:
+-------
+Dname           | Num_Employees
+----------------|---------------
+Research        | 4
+Administration  | 3
+Headquarters    | 1
+
+
+END OF SUBMISSION
